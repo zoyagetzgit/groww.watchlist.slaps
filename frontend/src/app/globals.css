@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #ffffff;
+  color: #44475b;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Groww's real app leans on this - almost no border-radius on full-width
+   list rows, but generous radius on anything card-shaped that sits on top
+   of the white background. Kept as a couple of small utilities instead of
+   repeating the same shadow/border combo inline everywhere. */
+.row-divider {
+  border-bottom: 1px solid #F0F0F2;
+}

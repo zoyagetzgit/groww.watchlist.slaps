@@ -1,0 +1,61 @@
+
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String      @id @default(cuid())
+  name       String      @unique
+  createdAt  DateTime    @default(now())
+  watchlists Watchlist[]
+  alerts     PriceAlert[]
+}
+
+model Watchlist {
+  id        String          @id @default(cuid())
+  name      String
+  userId    String
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     WatchlistItem[]
+  createdAt DateTime        @default(now())
+
+  
+  lastSnapshot  String?
+  lastVisitedAt DateTime?
+
+
+  dismissedCatalystIds String? // JSON string array
+}
+
+model WatchlistItem {
+  id          String    @id @default(cuid())
+  symbol      String
+  watchlistId String
+  watchlist   Watchlist @relation(fields: [watchlistId], references: [id], onDelete: Cascade)
+  addedAt     DateTime  @default(now())
+
+  @@unique([watchlistId, symbol])
+}
+
+
+model PriceAlert {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  symbol String
+
+  direction   String // "above" | "below"
+  targetPrice Float
+  status      String @default("active") // "active" | "triggered" | "expired" | "cancelled"
+
+  createdAt     DateTime  @default(now())
+  expiresAt     DateTime // createdAt + the TTL the user picked
+  triggeredAt   DateTime?
+  triggeredPrice Float?
+}
