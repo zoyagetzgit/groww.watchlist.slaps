@@ -82,8 +82,8 @@ frontend/
 - **Frontend**: Next.js 14 (App Router) + TypeScript + Tailwind,
   `idb-keyval` for the offline cache.
 
-  ## Setup Instructions
-  Instructions to Run
+## Setup Instructions
+Instructions to Run
 Step-by-step: getting it running
 
 1. Unzip this and open two terminal windows
