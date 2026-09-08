@@ -71,19 +71,7 @@ frontend/
   src/components/      -> ConfidenceBadge, MeaningfulChangeCard, ContagionCard, BreakItBar, etc.
 ```
 
-## How this scales
 
-Right now the scoring engine runs in-memory, recomputed per request — fine
-for one demo instance. At real scale: feed ingestion becomes an actual
-stream (Kafka-shaped, given what Groww's public stack looks like) instead
-of request-time simulation; volatility stats get maintained continuously
-per symbol instead of recomputed from scratch; and the snapshot JSON blob
-becomes a real per-symbol time-series table so history survives restarts
-and outlasts a single visit. The IndexedDB cache would also want to move
-from idb-keyval to something like RxDB if the app grew into full
-multi-device sync with conflict resolution — idb-keyval was the right call
-for "cache one thing, queue one kind of action," not for a bigger sync
-problem than that.
 
 
 
