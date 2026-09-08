@@ -12,8 +12,22 @@ import { startAlertSweep } from "./lib/alertSweep.js";
 
 const app = Fastify({ logger: { level: "info" } });
 
-const allowedOrigins = (process.env.CORS_ORIGIN ?? "http://localhost:3000").split(",");
-await app.register(cors, { origin: allowedOrigins, credentials: false });
+// Sanitize origins: removes extra whitespace and trailing slashes
+const rawOrigins = process.env.CORS_ORIGIN ?? "http://localhost:3000,https://groww-watchlist-sage.vercel.app";
+const allowedOrigins = rawOrigins.split(",").map((url) => url.trim().replace(/\/$/, ""));
+
+await app.register(cors, {
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true);
+    const cleanOrigin = origin.trim().replace(/\/$/, "");
+    if (allowedOrigins.includes(cleanOrigin)) {
+      return cb(null, true);
+    }
+    return cb(new Error("Not allowed by CORS"), false);
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  credentials: false
+});
 
 await app.register(authRoutes);
 await app.register(watchlistRoutes);
@@ -27,6 +41,10 @@ app.get("/health", async () => ({ ok: true }));
 startAlertSweep();
 
 const port = Number(process.env.PORT ?? 4000);
+
+// Ensure all plugins and CORS hooks are fully loaded before starting
+await app.ready();
+
 app.listen({ port, host: "0.0.0.0" }).then(() => {
-  console.log(`watchlist backend up on http://localhost:${port}`);
+  console.log(`watchlist backend up on port ${port}`);
 });
