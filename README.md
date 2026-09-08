@@ -92,7 +92,7 @@ You'll keep one terminal running the backend and one running the frontend,
 the whole time you're using the app. Open the unzipped folder in your code
 editor so you can see `backend/` and `frontend/` as two separate folders.
 
- 2. Terminal 1 — start the backend
+2. Terminal 1 — start the backend
 
 ```bash
 cd backend
@@ -126,7 +126,7 @@ Leave this running. You should see:
 watchlist backend up on http://localhost:4000
 ```
  
- 3. Terminal 2 — start the frontend
+3. Terminal 2 — start the frontend
 
 Open a **new** terminal window (don't close the first one) and run:
 
