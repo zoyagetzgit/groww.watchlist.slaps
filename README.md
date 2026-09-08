@@ -1,114 +1,10 @@
 # Smart Watchlist — Code by Groww 2026
 
-Two separate apps that talk to each other: a Fastify API (`backend/`) and a
-Next.js frontend (`frontend/`). You'll run both at the same time, in two
-terminal windows. If you've never done a two-server setup before, don't
-worry — every command is below, in order.
-
-## What you need installed first
-
-- **Node.js 18 or newer.** Check with `node -v` in your terminal. If that
-  command isn't found, install Node from nodejs.org (get the LTS version).
-- That's it — everything else (the database, the packages) gets set up by
-  the commands below.
-
-## Step-by-step: getting it running
-
-### 1. Unzip this and open two terminal windows
-
-You'll keep one terminal running the backend and one running the frontend,
-the whole time you're using the app. Open the unzipped folder in your code
-editor so you can see `backend/` and `frontend/` as two separate folders.
-
-### 2. Terminal 1 — start the backend
-
-```bash
-cd backend
-npm install
-```
-
-This downloads all the packages the backend needs (Fastify, Prisma, etc.) —
-it can take a minute or two, that's normal.
-
-```bash
-cp .env.example .env
-```
-
-This creates your local config file from the template. You don't need to
-edit anything in it for local use.
-
-```bash
-npx prisma migrate dev --name init
-```
-
-This creates your local database file (`backend/prisma/dev.db`) and sets up
-its tables. You'll see some Prisma output — that's expected.
-
-> **Already had this project set up before and just pulled the alerts
-> feature in?** Run `npx prisma migrate dev --name add_price_alerts`
-> instead — it adds the new table without touching your existing data.
-
-```bash
-npm run dev
-```
-
-Leave this running. You should see:
-```
-watchlist backend up on http://localhost:4000
-```
-If instead you see an error about the port being in use, something else on
-your machine is already using port 4000 — close that, or change `PORT` in
-`backend/.env`.
-
-### 3. Terminal 2 — start the frontend
-
-Open a **new** terminal window (don't close the first one) and run:
-
-```bash
-cd frontend
-npm install
-cp .env.example .env
-npm run dev
-```
-
-You should see:
-```
-Local: http://localhost:3000
-```
-
-### 4. Open the app
-
-Go to `http://localhost:3000` in your browser. Type any name (there's no
-password — this is a demo build, see Decisions below) and you're in.
-
-### If something's not loading
-
-- **"Couldn't reach the backend" on the login screen** → check Terminal 1 is
-  still running and says `watchlist backend up on http://localhost:4000`.
-- **Blank dashboard / stuck on "Loading your watchlist..."** → open your
-  browser's dev tools (F12) → Console tab, and see what error shows up.
-  Most likely the backend isn't running or `frontend/.env`'s
-  `NEXT_PUBLIC_API_URL` doesn't match where the backend actually is.
-- **Want to start over with a clean database?** Stop the backend (Ctrl+C in
-  Terminal 1), delete `backend/prisma/dev.db`, then re-run
-  `npx prisma migrate dev --name init` and `npm run dev` again.
-
-### Optional: skip the empty state
-
-```bash
-cd backend
-npm run seed
-```
-Then log in with the name `demo` — you'll get a pre-populated watchlist
-that already includes three IT-sector stocks (TCS, INFY, WIPRO), which is
-what you want on screen if you're about to demo the sector-contagion
-feature.
-
----
+Deployed Website: https://groww-watchlist-sage.vercel.app/
 
 ## What this actually does
 
-Five things, each answering a specific part of the brief:
+Five innovative features:
 
 1. **Time-travel diffing** — the backend snapshots exactly what you saw the
    last time you opened this watchlist, and the next visit compares live
@@ -153,18 +49,11 @@ Five things, each answering a specific part of the brief:
    checked" the same way a price change would.
    `backend/src/lib/market/alerts.ts`, `backend/src/lib/alertSweep.ts`.
 
-The **"Break it" bar** on the dashboard lets you trigger these failure
+The **"Break it" bar** on the dashboard  triggers these failure
 modes live — disconnect a feed, inject a garbage price, add artificial
-latency — so you can show the system handling it in real time instead of
+latency — shows the system handling it in real time instead of
 describing it in a README.
 
-## Why there's no real market data API
-
-I didn't want the demo's fate to depend on a free-tier API rate limit or
-unfamiliar wifi. Instead, `backend/src/lib/market/engine.ts` simulates what
-a real multi-vendor feed setup looks like underneath — nothing downstream
-(reconciliation, scoring, contagion detection) knows or cares that it's
-simulated. Swapping in a real feed later means changing one file.
 
 ## Architecture
 
@@ -196,18 +85,7 @@ multi-device sync with conflict resolution — idb-keyval was the right call
 for "cache one thing, queue one kind of action," not for a bigger sync
 problem than that.
 
-## Deliberate scope cuts
 
-- No real broker/exchange integration — explained above.
-- No password auth — a bearer token that's literally the user's id. Two
-  separate origins now (frontend on :3000, backend on :4000), so real
-  cookie-based auth would mean CORS/SameSite config for no real security
-  benefit at this scope.
-- The contagion "cause" (e.g. "a shift in USD/INR") is a plausible guess
-  from a small lookup table per sector, not a real news/macro correlation —
-  said explicitly in the UI copy, not hidden.
-- No historical charting — the score's explanation text is meant to
-  replace "go pull up a chart to understand why," not sit next to one.
 
 ## Stack
 
@@ -215,4 +93,4 @@ problem than that.
   `schema.prisma` + `DATABASE_URL` for Postgres in a real deploy).
 - **Frontend**: Next.js 14 (App Router) + TypeScript + Tailwind,
   `idb-keyval` for the offline cache.
-- No component library on the frontend, so nothing looks off-the-shelf.
+
