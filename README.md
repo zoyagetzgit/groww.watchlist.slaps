@@ -114,7 +114,7 @@ npx prisma migrate dev --name init
 ```
 
 This creates your local database file (`backend/prisma/dev.db`) and sets up
-its tables. You'll see some Prisma output — that's expected.
+its tables. 
  
 
 ```bash
