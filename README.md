@@ -99,8 +99,7 @@ cd backend
 npm install
 ```
 
-This downloads all the packages the backend needs (Fastify, Prisma, etc.) —
-it can take a minute or two, that's normal.
+This downloads all the packages the backend needs (Fastify, Prisma, etc.)
 
 ```bash
 cp .env.example .env
