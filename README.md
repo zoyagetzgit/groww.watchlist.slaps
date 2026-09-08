@@ -4,7 +4,7 @@ Deployed Website: https://groww-watchlist-sage.vercel.app/
 
 ## What this actually does
 
-Five innovative features:
+ Innovative features:
 
 1. **Time-travel diffing** — the backend snapshots exactly what you saw the
    last time you opened this watchlist, and the next visit compares live
