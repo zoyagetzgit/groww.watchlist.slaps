@@ -1,6 +1,6 @@
 import { getToken } from "./auth";
 
-// Strip trailing slashes from BASE URL if present
+
 const rawBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const BASE = rawBase.replace(/\/$/, "");
 
@@ -14,7 +14,7 @@ export async function apiFetch(path: string, init: RequestInit = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
-  // Ensure path starts with a single leading slash
+
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
 
   try {
