@@ -82,3 +82,68 @@ frontend/
 - **Frontend**: Next.js 14 (App Router) + TypeScript + Tailwind,
   `idb-keyval` for the offline cache.
 
+  ## Setup Instructions
+  Instructions to Run
+Step-by-step: getting it running
+
+1. Unzip this and open two terminal windows
+
+You'll keep one terminal running the backend and one running the frontend,
+the whole time you're using the app. Open the unzipped folder in your code
+editor so you can see `backend/` and `frontend/` as two separate folders.
+
+ 2. Terminal 1 — start the backend
+
+```bash
+cd backend
+npm install
+```
+
+This downloads all the packages the backend needs (Fastify, Prisma, etc.) —
+it can take a minute or two, that's normal.
+
+```bash
+cp .env.example .env
+```
+
+This creates your local config file from the template. You don't need to
+edit anything in it for local use.
+
+```bash
+npx prisma migrate dev --name init
+```
+
+This creates your local database file (`backend/prisma/dev.db`) and sets up
+its tables. You'll see some Prisma output — that's expected.
+ 
+
+```bash
+npm run dev
+```
+
+Leave this running. You should see:
+```
+watchlist backend up on http://localhost:4000
+```
+ 
+ 3. Terminal 2 — start the frontend
+
+Open a **new** terminal window (don't close the first one) and run:
+
+```bash
+cd frontend
+npm install
+cp .env.example .env
+npm run dev
+```
+
+You should see:
+```
+Local: http://localhost:3000
+```
+
+ 4. Open the app
+
+Go to `http://localhost:3000` in your browser. Type any name (there's no
+password — this is a demo build, see Decisions below) and you're in.
+
