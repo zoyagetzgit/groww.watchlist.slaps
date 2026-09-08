@@ -1,4 +1,4 @@
-# Smart Watchlist — Code by Groww 2026
+# Groww Resilient Watchlist — Code by Groww 2026
 
 Deployed Website: https://groww-watchlist-sage.vercel.app/
 
