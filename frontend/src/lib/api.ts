@@ -1,12 +1,11 @@
 import { getToken } from "./auth";
 
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+// Strip trailing slashes from BASE URL if present
+const rawBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+const BASE = rawBase.replace(/\/$/, "");
 
-// Deliberately short-ish timeout. The whole point of the "2000ms latency"
-// break-it control on the backend is to demonstrate the offline fallback -
-// that only works live if this timeout is comfortably under 2000ms, so a
-// judge sees the degraded state kick in instead of just a slow spinner.
-const TIMEOUT_MS = 1600;
+
+const TIMEOUT_MS = 30000;
 
 export class ApiTimeoutError extends Error {}
 
@@ -15,8 +14,11 @@ export async function apiFetch(path: string, init: RequestInit = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
+  // Ensure path starts with a single leading slash
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+
   try {
-    const res = await fetch(`${BASE}${path}`, {
+    const res = await fetch(`${BASE}${cleanPath}`, {
       ...init,
       signal: controller.signal,
       headers: {

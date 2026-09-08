@@ -12,7 +12,7 @@ import { startAlertSweep } from "./lib/alertSweep.js";
 
 const app = Fastify({ logger: { level: "info" } });
 
-// Sanitize origins: removes extra whitespace and trailing slashes
+
 const rawOrigins = process.env.CORS_ORIGIN ?? "http://localhost:3000,https://groww-watchlist-sage.vercel.app";
 const allowedOrigins = rawOrigins.split(",").map((url) => url.trim().replace(/\/$/, ""));
 
@@ -42,7 +42,7 @@ startAlertSweep();
 
 const port = Number(process.env.PORT ?? 4000);
 
-// Ensure all plugins and CORS hooks are fully loaded before starting
+
 await app.ready();
 
 app.listen({ port, host: "0.0.0.0" }).then(() => {
