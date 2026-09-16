@@ -31,7 +31,10 @@ type ChaosState = {
   disconnectA: boolean;
   garbageB: boolean;
   latencyMs: number;
-  forcedSectorShock: { sector: Sector; direction: 1 | -1 } | null;
+  // expiresAt so a triggered selloff is a burst, not a permanent condition -
+  // without it, one button press meant that sector's prices ran away for as
+  // long as the server stayed up.
+  forcedSectorShock: { sector: Sector; direction: 1 | -1; expiresAt: number } | null;
 };
 
 const g = globalThis as unknown as {
@@ -65,7 +68,15 @@ function chaos(): ChaosState {
 }
 
 export function setChaos(patch: Partial<ChaosState>) {
-  g.__chaos = { ...chaos(), ...patch };
+  // Strip undefined before merging. Plain object spread treats an explicit
+  // `undefined` as a real value and overwrites, so a partial update (e.g.
+  // only triggering a sector shock) was silently clearing every other
+  // toggle. Only keys actually present in the patch should change.
+  const clean: Partial<ChaosState> = {};
+  for (const [k, v] of Object.entries(patch)) {
+    if (v !== undefined) (clean as Record<string, unknown>)[k] = v;
+  }
+  g.__chaos = { ...chaos(), ...clean };
 }
 export function getChaos(): ChaosState {
   return chaos();
@@ -98,7 +109,11 @@ const sectorShockCache = new Map<Sector, { value: number; expiresAt: number }>()
 function sectorShock(sector: Sector): number {
   const forced = chaos().forcedSectorShock;
   if (forced && forced.sector === sector) {
-    return forced.direction * (2.5 + Math.random());
+    if (Date.now() < forced.expiresAt) {
+      return forced.direction * (2.5 + Math.random());
+    }
+    // burst is over - clear it so this branch stops being checked
+    setChaos({ forcedSectorShock: null });
   }
   const cached = sectorShockCache.get(sector);
   const now = Date.now();

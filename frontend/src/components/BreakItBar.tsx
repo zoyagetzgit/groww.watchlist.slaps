@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
 
 type Toggle = { disconnectA: boolean; garbageB: boolean; latency: boolean };
@@ -10,34 +10,40 @@ export default function BreakItBar() {
   const [expanded, setExpanded] = useState(false);
   const [state, setState] = useState<Toggle>({ disconnectA: false, garbageB: false, latency: false });
   const [busy, setBusy] = useState(false);
+  const [shockUntil, setShockUntil] = useState<number | null>(null);
 
-  async function push(next: Toggle) {
-    setBusy(true);
-    setState(next);
-    try {
-      await apiFetch("/chaos", {
-        method: "POST",
-        body: JSON.stringify({
-          disconnectA: next.disconnectA,
-          garbageB: next.garbageB,
-          latencyMs: next.latency ? 2000 : 0,
-        }),
+
+  useEffect(() => {
+    apiFetch("/chaos")
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data?.chaos) return;
+        setState({
+          disconnectA: Boolean(data.chaos.disconnectA),
+          garbageB: Boolean(data.chaos.garbageB),
+          latency: Number(data.chaos.latencyMs) > 0,
+        });
+        setShockUntil(data.chaos.forcedSectorShock?.expiresAt ?? null);
+      })
+      .catch(() => {
+      
       });
-    } catch {
+  }, []);
 
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function triggerSectorShock() {
+  // Send ONLY the field being changed, so one control can't reset another.
+  async function patch(body: Record<string, unknown>, next?: Toggle) {
     setBusy(true);
+    if (next) setState(next);
     try {
-      await apiFetch("/chaos", { method: "POST", body: JSON.stringify({ triggerSectorShock: { sector: "IT", direction: -1 } }) });
+      await apiFetch("/chaos", { method: "POST", body: JSON.stringify(body) });
+    } catch {
+   
     } finally {
       setBusy(false);
     }
   }
+
+  const shockActive = shockUntil !== null && shockUntil > Date.now();
 
   return (
     <div className="border border-border rounded-card overflow-hidden mb-6">
@@ -53,19 +59,39 @@ export default function BreakItBar() {
       </button>
       {expanded && (
         <div className="px-4 py-3">
-          <p className="text-[11px] text-inkMuted mb-2">Flipping these live to show the system handling failure.</p>
+          
+         
           <div className="flex flex-wrap gap-2 text-xs">
-            <Pill active={state.disconnectA} busy={busy} onClick={() => push({ ...state, disconnectA: !state.disconnectA })}>
+            <Pill
+              active={state.disconnectA}
+              busy={busy}
+              onClick={() => patch({ disconnectA: !state.disconnectA }, { ...state, disconnectA: !state.disconnectA })}
+            >
               Disconnect Feed A
             </Pill>
-            <Pill active={state.garbageB} busy={busy} onClick={() => push({ ...state, garbageB: !state.garbageB })}>
+            <Pill
+              active={state.garbageB}
+              busy={busy}
+              onClick={() => patch({ garbageB: !state.garbageB }, { ...state, garbageB: !state.garbageB })}
+            >
               Inject garbage into Feed B
             </Pill>
-            <Pill active={state.latency} busy={busy} onClick={() => push({ ...state, latency: !state.latency })}>
+            <Pill
+              active={state.latency}
+              busy={busy}
+              onClick={() => patch({ latencyMs: state.latency ? 0 : 2000 }, { ...state, latency: !state.latency })}
+            >
               Add 2000ms latency
             </Pill>
-            <Pill active={false} busy={busy} onClick={triggerSectorShock}>
-              Trigger IT sector selloff
+            <Pill
+              active={shockActive}
+              busy={busy}
+              onClick={() => {
+                patch({ triggerSectorShock: { sector: "IT", direction: -1 } });
+                setShockUntil(Date.now() + 25_000);
+              }}
+            >
+              {shockActive ? "IT selloff running..." : "Trigger IT sector selloff"}
             </Pill>
           </div>
         </div>
@@ -87,3 +113,4 @@ function Pill({ active, busy, onClick, children }: { active: boolean; busy: bool
     </button>
   );
 }
+

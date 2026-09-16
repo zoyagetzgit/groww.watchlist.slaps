@@ -9,20 +9,24 @@ export type Reconciled = {
   staleSeconds: number;
 };
 
-// Thresholds straight from the spec: >3s with no fresh reading = STALE,
-// >1.5% disagreement between feeds = CONFLICT. Conflict is checked before
-// staleness because a live-but-disagreeing pair of feeds is a more useful
-// thing to tell the user about than "everything's fine but old."
+// Thresholds from the spec: nothing fresher than 3s = STALE, feeds
+// disagreeing by >1.5% = CONFLICT.
 const STALE_AFTER_MS = 3000;
 const CONFLICT_SPREAD = 0.015;
 
+// Feed A is the primary realtime source; B and C are secondary/delayed
+// corroborators. That distinction matters for the confidence rule below:
+// a single surviving secondary feed is NOT enough to call a price "LIVE",
+// because there's nothing left to check it against. Without that rule, a
+// corrupted Feed B on its own would get reported as verified-live data -
+// exactly the failure this whole layer exists to prevent.
 export function reconcile(symbol: string): Reconciled {
   const readings = getFeedReadings(symbol);
   const now = Date.now();
 
-  const fresh = Object.values(readings).filter(
-    (r): r is NonNullable<typeof r> => r !== null && now - r.ts <= STALE_AFTER_MS
-  );
+  const isFresh = (r: { ts: number } | null) => r !== null && now - r.ts <= STALE_AFTER_MS;
+  const fresh = Object.values(readings).filter((r): r is NonNullable<typeof r> => isFresh(r));
+  const primaryIsFresh = isFresh(readings.A);
 
   if (fresh.length === 0) {
     const anyReading = Object.values(readings).find((r): r is NonNullable<typeof r> => r !== null);
@@ -38,9 +42,19 @@ export function reconcile(symbol: string): Reconciled {
   const prices = fresh.map((r) => r.price).sort((a, b) => a - b);
   const median = prices[Math.floor(prices.length / 2)];
   const spread = (Math.max(...prices) - Math.min(...prices)) / median;
-
-  const confidence: Confidence = spread > CONFLICT_SPREAD && fresh.length > 1 ? "CONFLICT" : "LIVE";
   const newestAgeSec = Math.round((now - Math.max(...fresh.map((r) => r.ts))) / 1000);
+
+  // Order matters. Disagreement is the most useful thing to surface, so
+  // it's checked first. Losing the primary feed comes next - we may still
+  // have a number, but nothing corroborates it, so it isn't "LIVE".
+  let confidence: Confidence;
+  if (fresh.length > 1 && spread > CONFLICT_SPREAD) {
+    confidence = "CONFLICT";
+  } else if (!primaryIsFresh) {
+    confidence = "STALE";
+  } else {
+    confidence = "LIVE";
+  }
 
   return { price: median, confidence, spreadPct: spread, staleSeconds: newestAgeSec };
 }
