@@ -63,7 +63,7 @@ export default function Home() {
           </button>
         </form>
         <p className="text-xs text-subtle mt-4">
-          No password - this is a demo build. Same name from any device opens the same watchlist.
+          No password required.
         </p>
       </div>
     </main>
